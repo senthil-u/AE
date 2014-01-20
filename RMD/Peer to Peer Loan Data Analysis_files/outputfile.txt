@@ -1,0 +1,106 @@
+
+> names(loandata)
+
+> load("C:/Users/nexus/Documents/data/loandata1.rda")
+
+> shapiro.test(loandata$interest.rate)
+
+	Shapiro-Wilk normality test
+
+data:  loandata$interest.rate
+W = 0.9815, p-value < 2.2e-16
+
+
+> tapply(loandata$interest.rate, loandata$loan.length, median, na.rm=TRUE)
+   36    60 
+12.12 16.49 
+
+> wilcox.test(interest.rate ~ loan.length, alternative="two.sided", data=loandata)
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  interest.rate by loan.length
+W = 231925.5, p-value < 2.2e-16
+alternative hypothesis: true location shift is not equal to 0
+
+
+> .Z <- scale(loandata[,c("amount.funded.by.investors","amount.requested")])
+
+> loandata$Z.amount.funded.by.investors <- .Z[,1]
+
+> loandata$Z.amount.requested <- .Z[,2]
+
+> remove(.Z)
+
+> .PC <- princomp(~Z.amount.funded.by.investors+Z.amount.requested, cor=TRUE, data=loandata)
+
+> unclass(loadings(.PC))  # component loadings
+                                Comp.1     Comp.2
+Z.amount.funded.by.investors 0.7071068 -0.7071068
+Z.amount.requested           0.7071068  0.7071068
+
+> .PC$sd^2  # component variances
+    Comp.1     Comp.2 
+1.96875385 0.03124615 
+
+> summary(.PC) # proportions of variance
+Importance of components:
+                          Comp.1     Comp.2
+Standard deviation     1.4031229 0.17676580
+Proportion of Variance 0.9843769 0.01562307
+Cumulative Proportion  0.9843769 1.00000000
+
+> screeplot(.PC)
+
+> loandata$PC1 <- .PC$scores[,1]
+
+> remove(.PC)
+
+> class(loandaata$loan.length)
+
+> class(loandata$loan.length)
+[1] "factor"
+
+> LinearModel.1 <- lm(interest.rate ~ fico.high +loan.length +PC1, data=loandata)
+
+> summary(LinearModel.1)
+
+Call:
+lm(formula = interest.rate ~ fico.high + loan.length + PC1, data = loandata)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-9.761 -1.447 -0.125  1.270 10.281 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)    
+(Intercept)       74.066930   0.866907   85.44   <2e-16 ***
+fico.high         -0.087436   0.001225  -71.35   <2e-16 ***
+loan.length[T.60]  3.290248   0.112559   29.23   <2e-16 ***
+PC1                0.770733   0.033445   23.05   <2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 2.098 on 2417 degrees of freedom
+Multiple R-squared:  0.7457,	Adjusted R-squared:  0.7454 
+F-statistic:  2363 on 3 and 2417 DF,  p-value: < 2.2e-16
+
+
+> loandata$fitted.LinearModel.1 <- fitted(LinearModel.1)
+
+> loandata$residuals.LinearModel.1 <- residuals(LinearModel.1)
+
+> scatterplot(fitted.LinearModel.1~residuals.LinearModel.1 | loan.length, reg.line=lm, smooth=TRUE, spread=TRUE, id.method='mahal', id.n = 2, boxplots='xy', 
++   span=0.5, by.groups=FALSE, data=loandata)
+22768 96693 
+ 1281  2016 
+
+> scatterplot(fitted.LinearModel.1~residuals.LinearModel.1 | loan.length, reg.line=lm, smooth=TRUE, spread=TRUE, id.method='mahal', id.n = 2, boxplots='xy', 
++   span=0.5, by.groups=FALSE, data=loandata)
+22768 96693 
+ 1281  2016 
+
+> Hist(loandata$residuals.LinearModel.1, scale="frequency", breaks="Sturges", col="darkgray")
+
+> Hist(loandata$residuals.LinearModel.1, scale="frequency", breaks="Sturges", col="darkgray")
+
